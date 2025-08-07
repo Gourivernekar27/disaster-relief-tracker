@@ -91,33 +91,7 @@ The database consists of **5 relational tables**:
 ---
 
 ## 📂 Folder Structure
-📁 disaster-relief-sql-project/
-├── 📁 datasets/ # CSV files for each table
-│ ├── relief_zones.csv
-│ ├── agencies.csv
-│ ├── resources.csv
-│ ├── deployments.csv
-│ └── impact_reports.csv
-│
-├── 📁 queries/ # SQL queries for insight extraction
-│ └── Disaster Relief SQL Queries.txt # Contains 18 analytical queries
-│
-├── 📁 query output files/ # CSV results of each query
-│ ├── query1.csv
-│ ├── query2.csv
-│ └── ...
-│
-├── 📁 query output screenshots/ # PNG screenshots of each query's output
-│ ├── output1.png
-│ ├── output2.png
-│ └── ...
-│
-├── 📁 schema diagram/ # Entity-Relationship Diagram
-│ └── ER_diagram.png
-└── README.md 
-
----
-
+<pre><code> 📁 disaster-relief-sql-project/ ├── 📁 datasets/ # CSV files for each table │ ├── relief_zones.csv │ ├── agencies.csv │ ├── resources.csv │ ├── deployments.csv │ └── impact_reports.csv │ ├── 📁 queries/ # SQL queries for insight extraction │ └── Disaster Relief SQL Queries.txt # Contains 18 analytical queries │ ├── 📁 query output files/ # CSV results of each query │ ├── query1.csv │ ├── query2.csv │ └── ... │ ├── 📁 query output screenshots/ # PNG screenshots of each query's output │ ├── output1.png │ ├── output2.png │ └── ... │ ├── 📁 schema diagram/ # Entity-Relationship Diagram │ └── ER_diagram.png │ └── README.md # Project overview and documentation </code></pre>
 ## 📈 Insightful SQL Queries (18+)
 
 Each query is designed to extract real-world insights, including:
