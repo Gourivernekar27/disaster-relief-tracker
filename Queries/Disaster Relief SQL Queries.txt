@@ -1,0 +1,235 @@
+-- Query 1: Total Impact Summary
+-- Purpose: Gives a nationwide overview of the disaster scale by aggregating total affected population, casualties, and houses damaged.
+SELECT 
+  SUM(affected_population) AS total_affected_population,
+  SUM(casualties) AS total_casualties,
+  SUM(houses_damaged) AS total_houses_damaged
+FROM impact_reports;
+
+-- Query 2: Total Aid Deployed Per Disaster Type
+-- Purpose: To understand how much aid is allocated per type of disaster to support equitable distribution planning.
+SELECT
+  rz.disaster_type,
+  SUM(r.quantity) AS total_quantity
+FROM
+  resources r
+  JOIN relief_zones rz ON r.zone_id = rz.zone_id
+GROUP BY
+  rz.disaster_type
+ORDER BY
+  total_quantity DESC;
+
+-- Query 3: Top 5 Most Affected Zones
+-- Purpose: Identifies the five most affected zones by population impact.
+SELECT 
+  rz.zone_name,
+  rz.state,
+  SUM(ir.affected_population) AS total_affected_population
+FROM impact_reports ir
+JOIN relief_zones rz ON ir.zone_id = rz.zone_id
+GROUP BY rz.zone_name, rz.state
+ORDER BY total_affected_population DESC
+LIMIT 5;
+
+-- Query 4: Resource Utilization per Region
+-- Purpose: To evaluate which regions have consumed the most resources.
+SELECT
+  rz.zone_name,
+  SUM(r.quantity) AS total_resources_used
+FROM
+  deployments d
+  JOIN resources r ON d.resource_id = r.resource_id
+  JOIN relief_zones rz ON d.zone_id = rz.zone_id
+GROUP BY
+  rz.zone_name
+ORDER BY
+  total_resources_used DESC;
+
+-- Query 5: Resource Utilization by Type
+-- Purpose: Displays total quantity of each resource type allocated across zones.
+SELECT 
+  resource_type,
+  SUM(quantity) AS total_quantity,
+  unit
+FROM resources
+GROUP BY resource_type, unit
+ORDER BY total_quantity DESC;
+
+-- Query 6: Top Responding NGOs
+-- Purpose: To rank agencies based on frequency of deployment, showing their operational engagement.
+SELECT
+  a.agency_name,
+  COUNT(*) AS total_deployments
+FROM
+  deployments d
+  JOIN agencies a ON d.agency_id = a.agency_id
+GROUP BY
+  a.agency_name
+ORDER BY
+  total_deployments DESC;
+
+-- Query 7: Regions with High Casualty to Aid Ratio
+-- Purpose: To identify under-served zones by comparing casualties with aid sent.
+SELECT
+  rz.zone_name,
+  ir.casualties,
+  COALESCE(SUM(r.quantity), 0) AS total_aid,
+  ROUND(CAST(ir.casualties AS numeric) / NULLIF(SUM(r.quantity), 0), 2) AS casualty_to_aid_ratio
+FROM
+  impact_reports ir
+  JOIN relief_zones rz ON ir.zone_id = rz.zone_id
+  LEFT JOIN resources r ON rz.zone_id = r.zone_id
+GROUP BY
+  rz.zone_name, ir.casualties
+ORDER BY
+  casualty_to_aid_ratio DESC;
+
+-- Query 8: Average Resources per Deployment
+-- Purpose: Calculates the average quantity of resources used per deployment operation.
+SELECT 
+  r.resource_type,
+  ROUND(AVG(r.quantity), 2) AS avg_quantity_per_deployment,
+  r.unit
+FROM deployments d
+JOIN resources r ON d.resource_id = r.resource_id
+GROUP BY r.resource_type, r.unit;
+
+-- Query 9: Peak Impact Month
+-- Purpose: Detects the calendar month with the highest number of impact reports—helps in seasonal planning.
+SELECT 
+  TO_CHAR(updated_on, 'Month') AS impact_month,
+  COUNT(*) AS num_reports
+FROM impact_reports
+GROUP BY impact_month
+ORDER BY num_reports DESC
+LIMIT 1;
+
+-- Query 10: Aid Item Totals & Number of Deployments
+-- Purpose: To analyze which resources are most frequently deployed and in what quantities.
+SELECT
+  r.resource_type,
+  COUNT(d.deployment_id) AS deployment_count,
+  SUM(r.quantity) AS total_quantity
+FROM
+  resources r
+  JOIN deployments d ON r.resource_id = d.resource_id
+GROUP BY
+  r.resource_type
+ORDER BY
+  total_quantity DESC;
+
+-- Query 11: Zone-wise Casualty Rate
+-- Purpose: Measures how deadly the disaster was per zone (casualties per 1000 people).
+SELECT 
+  rz.zone_name,
+  rz.state,
+  ROUND(SUM(ir.casualties)::numeric / NULLIF(SUM(ir.affected_population), 0) * 1000, 2) AS casualty_rate_per_1000
+FROM impact_reports ir
+JOIN relief_zones rz ON ir.zone_id = rz.zone_id
+GROUP BY rz.zone_name, rz.state
+ORDER BY casualty_rate_per_1000 DESC;
+
+-- Query 12: NGOs Deployed to Same Region
+-- Purpose: To track which NGOs focus repeatedly on particular zones.
+SELECT
+  a.agency_name,
+  rz.zone_name,
+  COUNT(*) AS times_deployed
+FROM
+  deployments d
+  JOIN agencies a ON d.agency_id = a.agency_id
+  JOIN relief_zones rz ON d.zone_id = rz.zone_id
+GROUP BY
+  a.agency_name, rz.zone_name
+ORDER BY
+  times_deployed DESC;
+
+-- Query 13: Max Number of NGOs Deployed in One Impact
+-- Purpose: To identify large-scale collaborations during high-severity disasters.
+SELECT
+  ir.zone_id,
+  rz.zone_name,
+  COUNT(DISTINCT d.agency_id) AS ngo_count
+FROM
+  impact_reports ir
+  JOIN deployments d ON ir.zone_id = d.zone_id
+  JOIN relief_zones rz ON ir.zone_id = rz.zone_id
+GROUP BY
+  ir.zone_id, rz.zone_name
+ORDER BY
+  ngo_count DESC
+LIMIT 1;
+
+-- Query 14: NGO Deployment Frequency
+-- Purpose: To analyze the operational frequency of each NGO for performance reviews.
+SELECT
+  a.agency_name,
+  COUNT(d.deployment_id) AS total_deployments
+FROM
+  agencies a
+  LEFT JOIN deployments d ON a.agency_id = d.agency_id
+GROUP BY
+  a.agency_name
+ORDER BY
+  total_deployments DESC;
+
+-- Query 15: State-wise Deployment Coverage
+-- Purpose: Measures how evenly resources are being deployed across different states.
+SELECT 
+  rz.state,
+  COUNT(DISTINCT d.zone_id) AS zones_covered,
+  COUNT(d.deployment_id) AS total_deployments
+FROM deployments d
+JOIN relief_zones rz ON d.zone_id = rz.zone_id
+GROUP BY rz.state
+ORDER BY zones_covered DESC;
+
+-- Query 16: Total Aid Sent in Most Deployed Region
+-- Purpose: To analyze how much aid was sent to the most active region.
+WITH most_deployed_zone AS (
+  SELECT
+    zone_id
+  FROM
+    deployments
+  GROUP BY
+    zone_id
+  ORDER BY
+    COUNT(*) DESC
+  LIMIT 1
+)
+SELECT
+  rz.zone_name,
+  SUM(r.quantity) AS total_aid_sent
+FROM
+  most_deployed_zone mdz
+  JOIN resources r ON r.zone_id = mdz.zone_id
+  JOIN relief_zones rz ON rz.zone_id = mdz.zone_id
+GROUP BY
+  rz.zone_name;
+
+
+-- Query 17: Zones Lacking Adequate Deployments
+-- Purpose: Helps identify under-served areas with high impact but very few deployments.
+SELECT 
+  rz.zone_name,
+  rz.state,
+  SUM(ir.affected_population) AS total_affected,
+  COUNT(d.deployment_id) AS deployment_count
+FROM relief_zones rz
+JOIN impact_reports ir ON rz.zone_id = ir.zone_id
+LEFT JOIN deployments d ON rz.zone_id = d.zone_id
+GROUP BY rz.zone_name, rz.state
+HAVING COUNT(d.deployment_id) <= 1
+ORDER BY total_affected DESC;
+
+-- Query 18: Peak Relief Month (by Deployments)
+-- Purpose: Reveals which calendar month had the most deployment activity.
+SELECT 
+  TO_CHAR(deployment_date, 'Month') AS deployment_month,
+  COUNT(*) AS num_deployments
+FROM deployments
+GROUP BY deployment_month
+ORDER BY num_deployments DESC
+LIMIT 1;
+
+
