@@ -115,6 +115,14 @@ Each of these has been documented via:
 - SQL Query (`querie/squeries.sql`)
 
 ---
+## 🔗 Live Dashboard (Tableau)
+
+I also built an **interactive dashboard** to visualize these insights:  
+
+👉 [Click here to view the Disaster Relief Dashboard on Tableau Public](https://public.tableau.com/views/DisasterRelief-Dashboard/Dashboard1)  
+
+📸 Preview:  
+![Dashboard Screenshot](dashboard_preview.png)  
 
 ## 🔎 Why This Project Matters
 
