@@ -122,7 +122,7 @@ I also built an **interactive dashboard** to visualize these insights:
 👉 [Click here to view the Disaster Relief Dashboard on Tableau Public](https://public.tableau.com/views/DisasterRelief-Dashboard/Dashboard1)  
 
 📸 Preview:  
-![Dashboard Screenshot](dashboard_preview.png)  
+![Dashboard Screenshot](dashboard 1.png)  
 
 ## 🔎 Why This Project Matters
 
